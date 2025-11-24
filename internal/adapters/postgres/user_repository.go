@@ -16,38 +16,30 @@ func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
 	return &UserRepository{pool: pool}
 }
 
-func (r *UserRepository) GetReviews(ctx context.Context, userId string) ([] models.PullRequestShort, error) {
-	var prId int
-	
+func (r *UserRepository) GetReviews(ctx context.Context, userId string) ([]models.PullRequestShort, error) {
 	query := `
-        SELECT pr.pr_id, pr.name, pr.author_id, pr.status
-        FROM pull_request pr
-        JOIN reviewers rev ON pr.pr_id = rev.pr_id
-        JOIN users u ON rev.user_id = u.user_id
-        WHERE u.user_id = $1
+        SELECT pr.pull_request_id, pr.pull_request_name, pr.author_id, pr.status
+        FROM pull_requests pr
+        JOIN pull_request_reviewers rev ON pr.pull_request_id = rev.pull_request_id
+        WHERE rev.reviewer_id = $1
     `
 
-    rows, err := r.pool.Query(ctx, query, userId)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	rows, err := r.pool.Query(ctx, query, userId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-    var reviews []models.PullRequestShort
-    for rows.Next() {
-        var pr models.PullRequestShort
-        err := rows.Scan(&prId, &pr.PullRequestName, &pr.AuthorId, &pr.Status)
-        if err != nil {
-            return nil, err
-        }
-        reviews = append(reviews, pr)
-    }
+	var reviews []models.PullRequestShort
+	for rows.Next() {
+		var pr models.PullRequestShort
+		if err := rows.Scan(&pr.PullRequestId, &pr.PullRequestName, &pr.AuthorId, &pr.Status); err != nil {
+			return nil, err
+		}
+		reviews = append(reviews, pr)
+	}
 
-    if rows.Err() != nil {
-        return nil, rows.Err()
-    }
-
-    return reviews, nil
+	return reviews, rows.Err()
 }
 
 func (r *UserRepository) SetIsActivePost(ctx context.Context, usersSetIsActiveRequest models.UsersSetIsActivePostRequest) (models.User, error) {
@@ -57,7 +49,7 @@ func (r *UserRepository) SetIsActivePost(ctx context.Context, usersSetIsActiveRe
         UPDATE users
         SET is_active = $1
         WHERE user_id = $2
-        RETURNING user_id, username, team_name, is_active;
+        RETURNING user_id, username, team_id, is_active;
     `
 
     err := r.pool.QueryRow(

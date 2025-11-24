@@ -45,9 +45,11 @@ func (api *PullRequestsAPI) PullRequestCreatePost(c *gin.Context) {
 
 	if errResponse.Error.Code == "AUTHOR_NOT_FOUND" || errResponse.Error.Code == "TEAM_NOT_FOUND" {
 		c.JSON(404, errResponse)
+		return
 	}
 	if errResponse.Error.Code == "PR_EXISTS" {
 		c.JSON(409, errResponse)
+		return
 	}
 
 	c.JSON(201, models.PullRequestCreatePost201Response{
@@ -67,12 +69,14 @@ func (api *PullRequestsAPI) PullRequestMergePost(c *gin.Context) {
 				Message: err.Error(),
 			},
 		})
+		return
 	}
 
 	prResponse, errResponse := api.pullRequestService.Merge(c.Request.Context(), pullRequestMergePostRequest)
 
 	if errResponse.Error.Code == "NOT FOUND" {
 		c.JSON(404, errResponse)
+		return
 	}
 
 	c.JSON(200, prResponse)
@@ -90,16 +94,19 @@ func (api *PullRequestsAPI) PullRequestReassignPost(c *gin.Context) {
 				Message: err.Error(),
 			},
 		})
+		return
 	}
 
 	prResponse, errResponse, newReviewer := api.pullRequestService.Reassign(c.Request.Context(), pullRequestReassignPostRequest)
 
 	if errResponse.Error.Code == "NOT_FOUND" {
 		c.JSON(404, errResponse)
+		return
 	}
 
 	if errResponse.Error.Code == "PR_MERGED" || errResponse.Error.Code == "NOT_ASSIGNED" || errResponse.Error.Code == "NO_CANDIDATE" {
 		c.JSON(409, errResponse)
+		return
 	}
 
 	c.JSON(200, models.PullRequestReassignPost200Response{

@@ -25,6 +25,8 @@ func (p *Postgres) ConnectToPostgresMainDatabase(cfg config.Config) error { // Ð
     dbUrl := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
     cfg.DbHost, cfg.DbPort, cfg.DbUser, cfg.DbPassword, "postgres", cfg.SslMode)
     
+    fmt.Println("Connecting to DB with:", dbUrl)
+    
     newPostgresPool, err := pgxpool.New(context.Background(), dbUrl)
     if err != nil {
         log.Fatal("Eror while connecting to postgres database\n", err)
@@ -78,15 +80,10 @@ func (p *Postgres) CreateDatabase(cfg config.Config) error {
 }
 
 func (p *Postgres) CreateDatabaseTables() error {
-    _, _ = p.Pool.Exec(context.Background(), `DROP TABLE IF EXISTS pull_request_reviewers CASCADE;`)
-    _, _ = p.Pool.Exec(context.Background(), `DROP TABLE IF EXISTS pull_requests CASCADE;`)
-    _, _ = p.Pool.Exec(context.Background(), `DROP TABLE IF EXISTS users CASCADE;`)
-    _, _ = p.Pool.Exec(context.Background(), `DROP TABLE IF EXISTS teams CASCADE;`)
-	
     _, err := p.Pool.Exec(context.Background(), `
         CREATE TABLE IF NOT EXISTS teams (
             team_id SERIAL PRIMARY KEY,
-            team_name TEXT
+            team_name TEXT UNIQUE NOT NULL
         );
     `)
 	if err != nil {
@@ -98,7 +95,7 @@ func (p *Postgres) CreateDatabaseTables() error {
         CREATE TABLE IF NOT EXISTS users (
             user_id TEXT PRIMARY KEY,
             username TEXT NOT NULL,
-            team_id INT REFERENCES teams(team_id),
+            team_id INT REFERENCES teams(team_id) ON DELETE SET NULL,
             is_active BOOLEAN NOT NULL
         );
     `)

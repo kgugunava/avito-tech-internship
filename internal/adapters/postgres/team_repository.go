@@ -6,7 +6,6 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/kgugunava/avito-tech-internship/internal/api/models"
 	api_models "github.com/kgugunava/avito-tech-internship/internal/api/models"
 )
 
@@ -76,7 +75,7 @@ func (r *TeamRepository) CreateTeam(ctx context.Context, team api_models.Team) (
 }
 
 func (r *TeamRepository) GetTeamByName(ctx context.Context, teamName string) (api_models.Team, error) {
-	var team models.Team
+	var team api_models.Team
 	var teamId int
     // 1. Получаем саму команду
     err := r.pool.QueryRow(ctx,
@@ -87,7 +86,7 @@ func (r *TeamRepository) GetTeamByName(ctx context.Context, teamName string) (ap
     ).Scan(&teamId, &team.TeamName)
 
     if err != nil {
-        return models.Team{}, err
+        return api_models.Team{}, err
     }
 
     // 2. Получаем участников команды
@@ -98,16 +97,16 @@ func (r *TeamRepository) GetTeamByName(ctx context.Context, teamName string) (ap
         teamId,
     )
     if err != nil {
-        return models.Team{}, err
+        return api_models.Team{}, err
     }
     defer rows.Close()
 
-    members := []models.TeamMember{}
+    members := []api_models.TeamMember{}
 
     for rows.Next() {
-        var m models.TeamMember
+        var m api_models.TeamMember
         if err := rows.Scan(&m.UserId, &m.Username, &m.IsActive); err != nil {
-            return models.Team{}, err
+            return api_models.Team{}, err
         }
         members = append(members, m)
     }

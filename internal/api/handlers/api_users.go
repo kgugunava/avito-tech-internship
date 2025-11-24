@@ -46,10 +46,12 @@ func (api *UsersAPI) UsersGetReviewGet(c *gin.Context) {
 	
 	if err.Error.Code == "USER_NOT_FOUND" {
 		c.JSON(404, err)
+		return
 	}
 
 	if err.Error.Code == "INTERNAL_ERROR" {
 		c.JSON(500, err)
+		return
 	}
 
 	c.JSON(200, models.UsersGetReviewGet200Response{
@@ -81,6 +83,7 @@ func (api *UsersAPI) UsersSetIsActivePost(c *gin.Context) {
 				Message: fmt.Sprint("user %s not found", usersSetIsActiveRequest.UserId),
 			},
 		})
+		return
 	}
 
 	c.JSON(200, models.UsersSetIsActivePost200Response{
