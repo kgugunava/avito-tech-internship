@@ -44,7 +44,6 @@ func (r *TeamRepository) CreateTeam(ctx context.Context, team api_models.Team) (
     }
     defer tx.Rollback(ctx)
 
-    // 1. Создаем команду
     err = tx.QueryRow(ctx,
         `INSERT INTO teams (team_name) VALUES ($1) RETURNING team_id`,
         team.TeamName,
@@ -53,7 +52,6 @@ func (r *TeamRepository) CreateTeam(ctx context.Context, team api_models.Team) (
         return api_models.Team{}, err
     }
 
-    // 2. Создаем/обновляем пользователей и привязываем к команде
     for _, m := range team.Members {
         _, err := tx.Exec(ctx,
             `INSERT INTO users (user_id, username, is_active, team_id)
@@ -77,7 +75,7 @@ func (r *TeamRepository) CreateTeam(ctx context.Context, team api_models.Team) (
 func (r *TeamRepository) GetTeamByName(ctx context.Context, teamName string) (api_models.Team, error) {
 	var team api_models.Team
 	var teamId int
-    // 1. Получаем саму команду
+
     err := r.pool.QueryRow(ctx,
         `SELECT team_id, team_name 
          FROM teams 
@@ -89,7 +87,6 @@ func (r *TeamRepository) GetTeamByName(ctx context.Context, teamName string) (ap
         return api_models.Team{}, err
     }
 
-    // 2. Получаем участников команды
     rows, err := r.pool.Query(ctx,
         `SELECT user_id, username, is_active
          FROM users

@@ -117,7 +117,6 @@ func (r *PullRequestRepository) GetByID(ctx context.Context, prID string) (model
         return pr, errors.New("pull request not found")
     }
 
-    // Получаем ревьюверов
     reviewersRows, err := r.pool.Query(ctx,
         `SELECT reviewer_id FROM pull_request_reviewers WHERE pull_request_id = $1`,
         prID,

@@ -90,7 +90,6 @@ func (api *TeamsAPI) TeamGetGet(c *gin.Context) {
 		return
 	}
 
-	// 2. Получаем команду из сервиса
 	team, err := api.teamService.GetTeamByName(c.Request.Context(), teamName)
 	if err != nil {
 		c.JSON(404, models.ErrorResponse{

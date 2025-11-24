@@ -103,7 +103,7 @@ func (s *PullRequestService) Merge(ctx context.Context, req models.PullRequestMe
     if err != nil {
         return pr, models.ErrorResponse{
 			Error: models.ErrorResponseError{
-				Code: "NOT FOUND", // 404 - pr not found
+				Code: "NOT FOUND",
 				Message: err.Error(),
 			},
 		}
@@ -132,7 +132,6 @@ func (s *PullRequestService) Reassign(ctx context.Context, req models.PullReques
 		}, ""
     }
 
-    // Проверяем, что старый ревьювер реально назначен
     isAssigned := false
     for _, r := range pr.AssignedReviewers {
         if r == req.OldUserId {
@@ -149,7 +148,6 @@ func (s *PullRequestService) Reassign(ctx context.Context, req models.PullReques
 		}, ""
     }
 
-    // Узнаём команду старого ревьювера
     teamName, err := s.pullRequestRepo.GetUserTeam(ctx, req.OldUserId)
     if err != nil {
         return pr, models.ErrorResponse{
@@ -160,7 +158,6 @@ func (s *PullRequestService) Reassign(ctx context.Context, req models.PullReques
 		}, ""
     }
 
-    // Ищем замену
     newReviewer, err := s.pullRequestRepo.FindReplacement(ctx, req.OldUserId, teamName)
     if err != nil {
         return pr, models.ErrorResponse{
@@ -171,7 +168,6 @@ func (s *PullRequestService) Reassign(ctx context.Context, req models.PullReques
 		}, ""
     }
 
-    // Обновляем reviewers в БД
     err = s.pullRequestRepo.ReplaceReviewer(ctx, req.PullRequestId, req.OldUserId, newReviewer)
     if err != nil {
         return pr, models.ErrorResponse{
@@ -182,7 +178,6 @@ func (s *PullRequestService) Reassign(ctx context.Context, req models.PullReques
 		}, ""
     }
 
-    // Обновляем структуру PR
     for i := range pr.AssignedReviewers {
         if pr.AssignedReviewers[i] == req.OldUserId {
             pr.AssignedReviewers[i] = newReviewer
